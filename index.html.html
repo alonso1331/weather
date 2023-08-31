@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>天氣小卡片</title>
+    <style>
+        *{
+            margin: 0px;
+            padding: 0px;
+            box-sizing: border-box;
+        }
+
+        main{
+            width: 100%;
+            height: 100%;
+        }
+
+        nav{
+            width: 100%;
+            height: 72px;
+            padding: 16px 60px;
+            background-color: cornflowerblue;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-around;
+        }
+
+        h1{
+            line-height: 44px;
+        }
+
+        button{
+            width: 80px;
+            height: 40px;
+            text-align: center;
+            line-height: 40px;
+            /* background-color: darkmagenta; */
+            background-color: #0e49d4;
+            border: 0px;
+            color: aliceblue;
+            border-radius: 10px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        button:hover{
+            transform: scale(1.2);
+        }
+
+        .container{
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            padding: 40px 60px;
+            gap: 30px;
+        }
+
+        h2{
+            width: 100%;
+            margin-top: -30px;
+            margin-left: 10px;
+        }
+
+        .card{
+            width: 300px;
+            height: 380px;
+            border: solid gold 2px;
+            border-radius: 12px;
+            background-color: rgb(190, 206, 235);
+        }
+
+        .card:hover{
+            transform: scale(1.1);
+            animation-timing-function: ease-in-out;
+            transition-duration: 2s;
+        }
+
+        img{
+            width: 296px;
+            height: 200px;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+            object-fit: contain;
+            animation: shake 5s infinite;
+        }
+
+        @keyframes shake{
+            0% {
+                transform: translateX(0);
+            }
+            25% {
+                transform: translateX(12px);
+            }
+            50% {
+                transform: translateX(0px);
+            }
+            75% {
+                transform: translateX(12px);
+            }
+            100% {
+                transform: translateX(0);
+            }
+        }
+
+        h3{
+            font-size: 22px;
+            text-align: center;
+            margin: 15px 0px;
+        }
+
+        p{
+            text-align: center;
+            margin: 10px 0px;
+            font-size: 18px;
+        }
+
+        .notshow{
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <nav>
+            <h1>天氣預報</h1>
+            <button type="button">全部</button>
+            <button type="button">北部</button>
+            <button type="button">中部</button>
+            <button type="button">南部</button>
+            <button type="button">東部</button>
+            <button type="button">離島</button>
+        </nav>
+        
+        <div class="container">
+            <h2>預報時間：</h2>
+            <!-- <div class="card">
+                <img src="./img/CLEAR.png" alt="">
+                <div class="content">
+                    <h3>臺北市</h2>
+                    <p>天氣狀況</p>
+                    <p>36.5~38.2°C</p>
+                    <p>體感溫度</p>
+                </div>
+            </div> -->
+        </div>
+    </main>
+
+    <script>
+        const h2 = document.querySelector('h2')
+        const container = document.querySelector('.container');
+        const buttons = document.querySelectorAll('button');
+        // console.log(container);
+
+        // 氣象預報API
+        fetch('https://opendata.cwb.gov.tw/api/v1/rest/datastore/F-C0032-001?Authorization=CWB-969F1F28-AE83-45AF-A5F0-85C38982FA79')
+            .then((response) => {
+                return response.json();
+            })
+            .then((data) => {
+                // console.log(data);
+
+                const time = data.records.location[0].weatherElement[0].time;
+                // console.log(time);
+
+                h2.innerHTML =`
+                    <h2>預報時間：
+                        ${time[0].startTime} ~ ${time[2].endTime}
+                    </h2>
+                `;
+
+                // 展示所有縣市氣象
+                data.records.location.forEach((item, index) => {
+                    // 以陣列的排序做變數
+                    const weather =  data.records.location[index];
+
+                    // 將天氣狀況設成變數，以便使用
+                    const condition = weather.weatherElement[0].time[0].parameter.parameterName;
+                        // console.log(condition);
+
+                    // 設定一個變數於卡片裡的img.src 使用
+                    let img_path;
+
+                    // 天氣圖片判定 查詢資料是否有某字串，用includes
+                    if (condition.includes('雲') && !condition.includes('雨')) {
+                        img_path = "./img/MOSTLYCLEAR.png";
+                    } else if (condition.includes('陰') && !condition.includes('雨')) {
+                        img_path = "./img/CLOUDY.png";
+                    } else if (condition.includes('雷')) {
+                        img_path = "./img/THUNDERSHOWERS.png";
+                    } else if (condition.includes('雨')) {
+                        img_path = "./img/RAIN.png";
+                    } else if (condition.includes('晴') && !condition.includes('雲') && !condition.includes('雷') && !condition.includes('雨')){
+                        img_path = "./img/CLEAR.png";
+                    } else {
+                        img_path = "./img/PARTLYCLOUDY.png";
+                    }
+
+                    // 將資料塞到卡片並用迴圈輸出
+                    container.innerHTML += `
+                        
+                            <div class="card">
+                                <img src="${img_path}" alt="">
+                                <div class="content">
+                                    <h3>${weather.locationName}</h3>
+                                    <p>${weather.weatherElement[0].time[0].parameter.parameterName}</p>
+                                    <p>
+                                        ${weather.weatherElement[2].time[1].parameter.parameterName} ~
+                                        ${weather.weatherElement[4].time[1].parameter.parameterName}°C
+                                    </p>
+                                    <p>${weather.weatherElement[3].time[0].parameter.parameterName}</p>
+                                </div>
+                            </div>
+                    `;
+                    // console.log(weather.locationName);    
+                });
+
+                // 頁籤功能
+                // 使用forEach()要注意選擇器要選擇querySelectorAll，不然會報錯
+                const cards = document.querySelectorAll('.card');
+
+                // const north = cards[1,3,4,5,8,13,18];
+                // const center = cards[9,11,14,20];
+                // const south = cards[0,2,6,15,17];
+                // const east = cards[7,10,12];
+                // const island = cards[16,19,21];
+                // console.log(cards[0]);
+
+                // 用迴圈加上事件監聽，判定是哪個按鈕被點擊
+                buttons.forEach((button) => {
+                    // console.log(buttons[0]);
+                    button.addEventListener('click', () => {
+                        // console.log(button);
+
+                        // 按鈕被點擊後，卡片要先設定為display = 'none'，然後再依照判斷內容，顯示對應的卡片
+                        cards.forEach((card) => {
+                            card.style.display = 'none';
+
+                            if (button == buttons[0]) {
+                                card.style.display = 'block';
+                            } else if (button == buttons[1]) {
+                                cards[1].style.display = 'block';
+                                cards[3].style.display = 'block';
+                                cards[4].style.display = 'block';
+                                cards[5].style.display = 'block';
+                                cards[8].style.display = 'block';
+                                cards[13].style.display = 'block';
+                                cards[18].style.display = 'block';
+                            } else if (button == buttons[2]) {
+                                cards[0].style.display = 'block';
+                                cards[2].style.display = 'block';
+                                cards[9].style.display = 'block';
+                                cards[11].style.display = 'block';
+                                cards[14].style.display = 'block';
+                                cards[20].style.display = 'block';
+                            } else if (button == buttons[3]) {
+                                
+                                cards[6].style.display = 'block';
+                                cards[15].style.display = 'block';
+                                cards[17].style.display = 'block';
+                            } else if (button == buttons[4]) {
+                                cards[7].style.display = 'block';
+                                cards[10].style.display = 'block';
+                                cards[12].style.display = 'block';
+                            } else {
+                                cards[16].style.display = 'block';
+                                cards[19].style.display = 'block';
+                                cards[21].style.display = 'block';
+                            }
+                        });
+                    });
+                });
+            });
+    </script>
+</body>
+</html>
